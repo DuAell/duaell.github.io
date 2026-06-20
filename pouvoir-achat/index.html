@@ -187,7 +187,7 @@
     const tol=Math.max(1, Math.abs(c)*0.0005);
     verdict.classList.remove('is-gain','is-perte','is-flat');
     if(real>tol){ verdict.classList.add('is-gain'); elLine.textContent='Vous gagnez du pouvoir d\u2019achat.'; }
-    else if(real<-tol){ verdict.classList.add('is-perte'); elLine.textContent='Vous en perdez.'; }
+    else if(real<-tol){ verdict.classList.add('is-perte'); elLine.textContent='Vous perdez du pouvoir d\u2019achat.'; }
     else{ verdict.classList.add('is-flat'); elLine.textContent='Vous faites du surplace.'; }
 
     pop(elFinal); pop(elEquiv); pop(elReal);
