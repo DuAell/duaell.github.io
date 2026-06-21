@@ -43,6 +43,13 @@
   .btn{display:inline-block;text-decoration:none;color:var(--nuit);border:1.5px solid var(--nuit);border-radius:8px;padding:.8rem 1.6rem;font-weight:600;font-size:.98rem;transition:background .18s ease,color .18s ease}
   .btn:hover,.btn:focus-visible{background:var(--nuit);color:var(--blanc);outline:none}
 
+  /* EDUCATION clair — le coeur (volet finance) */
+  .edu{background:var(--casse);padding:clamp(2.5rem,6vw,3.5rem) 0}
+  .edu .col{border-top:1px solid var(--gris-clair);padding-top:clamp(2.5rem,6vw,3.5rem)}
+  .edu .eyebrow{color:var(--electrique-d)}
+  .edu h2{font-size:clamp(1.5rem,4.2vw,2rem);font-weight:700;color:var(--nuit);margin-bottom:1rem;letter-spacing:-.01em}
+  .edu p{color:var(--gris);max-width:38em;margin-bottom:1.8rem;font-size:clamp(1rem,2.4vw,1.1rem)}
+
   /* OUTILS clair — annexe, en bas */
   .tools{background:var(--casse);padding:clamp(2.5rem,6vw,3.5rem) 0 clamp(3rem,8vw,5rem)}
   .tools .col{border-top:1px solid var(--gris-clair);padding-top:clamp(2.5rem,6vw,3.5rem)}
@@ -84,7 +91,16 @@
     </div>
   </section>
 
-  <section class="tools">
+  <section class="edu">
+    <div class="col">
+      <p class="eyebrow">Éducation financière</p>
+      <h2>Comprendre ses finances</h2>
+      <p>La plupart des décisions financières se jouent sur des bases mal comprises : un taux, un effet de levier, une fiscalité. J'aide les particuliers à mieux comprendre leurs finances, en partant de leur situation réelle. Mon approche est patrimoniale et internationale, pensée pour les expatriés (sans s'y limiter), pour qui veut sortir de la gestion bancaire traditionnelle.</p>
+      <a class="btn" href="#outils">Voir les outils ↓</a>
+    </div>
+  </section>
+
+  <section class="tools" id="outils">
     <div class="col">
       <p class="eyebrow">Les outils</p>
       <p class="lead">Dans le prolongement, quelques outils gratuits. </p>
@@ -92,6 +108,18 @@
       <a class="card" href="./pouvoir-achat/">
         <h3>Pouvoir d'achat réel</h3>
         <p>Ce que votre capital vaudra vraiment dans dix ans, une fois l'inflation déduite.</p>
+        <span class="go">Ouvrir l'outil →</span>
+      </a>
+
+      <a class="card" href="./acheter-ou-louer/">
+        <h3>Acheter ou louer</h3>
+        <p>Ce que coûte vraiment un achat immobilier, comparé à louer le même bien.</p>
+        <span class="go">Ouvrir l'outil →</span>
+      </a>
+
+      <a class="card" href="./apport-ou-placement/">
+        <h3>Apport ou placement</h3>
+        <p>Apporter plus sur un achat, ou emprunter davantage et placer la différence ?</p>
         <span class="go">Ouvrir l'outil →</span>
       </a>
 

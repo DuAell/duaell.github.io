@@ -1,0 +1,147 @@
+/* Style commun à tous les calculateurs (pouvoir-achat, acheter-ou-louer, apport-ou-placement, ...) */
+
+:root{
+  --paper:#FAF8F3;
+  --ink:#20201C;
+  --ink-soft:#6B675E;
+  --pen:#285A8C;
+  --pen-line:#A9C2DA;
+  --mark:#F1E1BE;
+  --gain:#3E6B4F;
+  --perte:#A84A32;
+  --rule:#E6E1D6;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Newsreader",Georgia,serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:clamp(1.5rem,5vw,4rem) 1.25rem;
+}
+.wrap{width:100%;max-width:640px;margin:auto 0}
+.eyebrow{
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:.72rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin:0 0 1.6rem;
+}
+.statement{
+  font-size:clamp(1.45rem,4.6vw,2.05rem);
+  line-height:1.62;
+  font-weight:400;
+  letter-spacing:-.005em;
+  margin:0;
+}
+.statement + .statement{margin-top:1.55rem}
+
+/* Petite note de calcul accolée à une phrase, pour clarifier ce qu'un chiffre inclut
+   sans alourdir la phrase principale */
+.statement .detail{
+  display:block;
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:.56em;
+  font-style:normal;
+  letter-spacing:0;
+  color:var(--ink-soft);
+  line-height:1.5;
+  margin-top:.3rem;
+}
+
+/* Signature : les nombres se remplissent dans la phrase, comme une ligne à compléter */
+input.fill{
+  font:inherit;
+  color:var(--pen);
+  font-weight:600;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid var(--pen-line);
+  text-align:center;
+  padding:0 .08em .04em;
+  margin:0 .04em;
+  width:2ch;
+  transition:border-color .18s ease, background .18s ease;
+  border-radius:2px 2px 0 0;
+}
+input.fill:hover{background:rgba(40,90,140,.06)}
+input.fill:focus{outline:none;border-color:var(--pen);background:rgba(40,90,140,.08)}
+
+/* Les réponses : surlignées, c'est le site qui les calcule */
+.answer{
+  font-weight:600;
+  white-space:nowrap;
+  background:linear-gradient(180deg,transparent 58%,var(--mark) 58%);
+  padding:0 .12em;
+}
+/* Pour distinguer un gain (plus-value, gain de placement) d'une charge :
+   même format, mais coloré comme dans le verdict, pas neutre comme un coût */
+.answer.is-gain{color:var(--gain)}
+.answer.is-perte{color:var(--perte)}
+
+.verdict{
+  margin-top:2.4rem;
+  padding-top:1.7rem;
+  border-top:1px solid var(--rule);
+  font-size:clamp(1.15rem,3.6vw,1.4rem);
+  line-height:1.55;
+}
+.verdict .num{font-weight:600}
+.verdict.is-gain .num,.verdict.is-gain b{color:var(--gain)}
+.verdict.is-perte .num,.verdict.is-perte b{color:var(--perte)}
+.verdict.is-flat .num,.verdict.is-flat b{color:var(--ink-soft)}
+.verdict b{font-weight:600}
+
+/* Hypothèses secondaires : pré-remplies, modifiables, mais volontairement discrètes
+   (pas dans la phrase principale, pour garder le calculateur simple et percutant) */
+.assumptions{
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:.86rem;
+  color:var(--ink-soft);
+  line-height:1.75;
+  margin-top:1.7rem;
+  padding-top:1.3rem;
+  border-top:1px dashed var(--rule);
+}
+.assumptions .eyebrow{margin-bottom:.7rem}
+input.fill-sub{
+  font:inherit;
+  font-weight:600;
+  color:var(--ink-soft);
+  background:transparent;
+  border:none;
+  border-bottom:1.5px dotted var(--pen-line);
+  text-align:center;
+  padding:0 .06em .02em;
+  margin:0 .03em;
+  width:2ch;
+  transition:border-color .18s ease, background .18s ease, color .18s ease;
+}
+input.fill-sub:hover{background:rgba(40,90,140,.05);color:var(--pen)}
+input.fill-sub:focus{outline:none;border-color:var(--pen);background:rgba(40,90,140,.07);color:var(--pen)}
+
+.foot{
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:.78rem;
+  color:var(--ink-soft);
+  margin-top:3rem;
+  line-height:1.5;
+}
+.foot a{color:var(--pen);text-decoration:none;border-bottom:1px solid var(--pen-line)}
+
+#measure{position:absolute;visibility:hidden;white-space:pre;left:-9999px;top:-9999px}
+
+.pop{animation:pop .35s ease}
+@keyframes pop{
+  0%{opacity:.35;transform:translateY(2px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}

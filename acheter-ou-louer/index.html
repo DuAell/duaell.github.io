@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaut-il mieux acheter ou louer ?</title>
+<meta name="description" content="Acheter ou louer ce logement : ce qu'il reste sur le compte à la fin, dans les deux cas. Valeur du bien ou capital placé, en une phrase.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/outils.css">
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">Acheter ou louer</p>
+
+    <p class="statement">
+      Un bien à
+      <input class="fill" id="prix" inputmode="decimal" aria-label="Prix du bien en euros" value="250000">&nbsp;€,
+      financé sur
+      <input class="fill" id="n" inputmode="numeric" aria-label="Durée en années" value="10">&nbsp;ans
+      à
+      <input class="fill" id="rc" inputmode="decimal" aria-label="Taux du crédit en pourcent" value="3.3">&nbsp;%,
+      contre un loyer de
+      <input class="fill" id="loyer" inputmode="decimal" aria-label="Loyer mensuel en euros" value="950">&nbsp;€/mois.
+    </p>
+
+    <p class="statement">
+      Mensualité : <span class="answer" id="mensualite">0&nbsp;€</span>.
+      En achetant, il reste à la fin <span class="answer" id="patrimoineAchat">0&nbsp;€</span> (la valeur du bien).
+      <small class="detail">Bien revalorisé à <span class="answer" id="valeurBien">0&nbsp;€</span>. Coût sur la période, payé et non récupéré : intérêts <span class="answer" id="interets">0&nbsp;€</span>, assurance <span class="answer" id="assurance">0&nbsp;€</span>, frais de notaire <span class="answer" id="notaire">0&nbsp;€</span>, charges <span class="answer" id="charges">0&nbsp;€</span>. <span id="buySideWrap">Les années où le crédit coûte moins cher que le loyer, le surplus est placé : <span class="answer is-gain" id="buySideFV">0&nbsp;€</span> à la fin.</span></small>
+    </p>
+
+    <p class="statement">
+      En louant, il reste à la fin <span class="answer" id="patrimoineLocation">0&nbsp;€</span>.
+      <small class="detail">Loyers payés, non récupérés : <span class="answer" id="totalLoyers">0&nbsp;€</span>. Apport et frais de notaire évités (<span class="answer" id="capitalInitial">0&nbsp;€</span>) placés et capitalisés : <span class="answer is-gain" id="k0FV">0&nbsp;€</span>. <span id="rentSideWrap">Les années où le loyer coûte moins cher que le crédit, le surplus est placé aussi : <span class="answer is-gain" id="rentSideFV">0&nbsp;€</span> à la fin.</span></small>
+    </p>
+
+    <p class="verdict" id="verdict">
+      Écart de patrimoine final : <span class="num" id="delta">0&nbsp;€</span>. <b id="line">Ça se neutralise.</b>
+    </p>
+
+    <p class="assumptions">
+      <span class="eyebrow">Hypothèses retenues (modifiables)</span>
+      Apport de <input class="fill-sub" id="apportPct" inputmode="decimal" aria-label="Apport en pourcent du prix" value="20">&nbsp;% du prix,
+      frais de notaire de <input class="fill-sub" id="notairePct" inputmode="decimal" aria-label="Frais de notaire en pourcent" value="7.5">&nbsp;%,
+      assurance emprunteur de <input class="fill-sub" id="assurancePct" inputmode="decimal" aria-label="Assurance emprunteur en pourcent par an" value="0.3">&nbsp;%/an du capital emprunté,
+      charges annuelles (taxe foncière, entretien, copropriété) de <input class="fill-sub" id="chargesPct" inputmode="decimal" aria-label="Charges annuelles en pourcent du prix" value="1.2">&nbsp;% du prix,
+      valorisation du bien de <input class="fill-sub" id="valorPct" inputmode="decimal" aria-label="Valorisation annuelle en pourcent" value="1.5">&nbsp;%/an,
+      hausse du loyer de <input class="fill-sub" id="loyerIdxPct" inputmode="decimal" aria-label="Revalorisation du loyer en pourcent" value="2">&nbsp;%/an,
+      et un placement (apport, frais de notaire évités, écarts de trésorerie) à <input class="fill-sub" id="altPct" inputmode="decimal" aria-label="Rendement alternatif en pourcent" value="4">&nbsp;%/an.
+    </p>
+
+    <p class="foot">
+      Patrimoine final = valeur du bien (achat) ou capital placé (location), écarts de trésorerie annuels capitalisés inclus.<br>
+      Plus-value immobilière et gains de placement calculés hors fiscalité.<br>
+      Modifiez les valeurs, tout se recalcule.
+    </p>
+  </main>
+
+  <span id="measure" aria-hidden="true"></span>
+
+<script>
+(function(){
+  const eur = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0,minimumFractionDigits:0});
+  const eurSigned = (x)=> (x>=0?'+':'−') + eur.format(Math.abs(x));
+  const grp = new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2});
+
+  const prix=document.getElementById('prix'), n=document.getElementById('n'), rc=document.getElementById('rc'),
+        loyer=document.getElementById('loyer'), apportPct=document.getElementById('apportPct'),
+        notairePct=document.getElementById('notairePct'), assurancePct=document.getElementById('assurancePct'),
+        chargesPct=document.getElementById('chargesPct'),
+        valorPct=document.getElementById('valorPct'), loyerIdxPct=document.getElementById('loyerIdxPct'),
+        altPct=document.getElementById('altPct');
+  const elMensualite=document.getElementById('mensualite'),
+        elPatrimoineAchat=document.getElementById('patrimoineAchat'),
+        elValeurBien=document.getElementById('valeurBien'),
+        elInterets=document.getElementById('interets'), elAssurance=document.getElementById('assurance'),
+        elNotaire=document.getElementById('notaire'), elCharges=document.getElementById('charges'),
+        elBuySideWrap=document.getElementById('buySideWrap'), elBuySideFV=document.getElementById('buySideFV'),
+        elPatrimoineLocation=document.getElementById('patrimoineLocation'),
+        elTotalLoyers=document.getElementById('totalLoyers'),
+        elCapitalInitial=document.getElementById('capitalInitial'), elK0FV=document.getElementById('k0FV'),
+        elRentSideWrap=document.getElementById('rentSideWrap'), elRentSideFV=document.getElementById('rentSideFV'),
+        elDelta=document.getElementById('delta'), elLine=document.getElementById('line'),
+        verdict=document.getElementById('verdict');
+  const measure=document.getElementById('measure');
+  const inputs=[prix,n,rc,loyer,apportPct,notairePct,assurancePct,chargesPct,valorPct,loyerIdxPct,altPct];
+
+  function parse(v){ return parseFloat(String(v).replace(/\s| /g,'').replace(',','.')) || 0; }
+
+  function sizeOf(inp){
+    const cs=getComputedStyle(inp);
+    measure.style.font=cs.font;
+    measure.style.fontWeight=cs.fontWeight;
+    measure.style.letterSpacing=cs.letterSpacing;
+    measure.textContent=inp.value.length?inp.value:inp.placeholder||'0';
+    inp.style.width=(measure.offsetWidth+10)+'px';
+  }
+
+  function nbsp(s){ return s.replace(/\s/g,' '); }
+
+  function pop(el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+
+  function compute(){
+    const Prix=parse(prix.value), N=Math.max(parse(n.value),1), Rc=parse(rc.value)/100,
+          Loyer=parse(loyer.value), ApportPct=parse(apportPct.value)/100, NotairePct=parse(notairePct.value)/100,
+          AssurancePct=parse(assurancePct.value)/100,
+          ChargesPct=parse(chargesPct.value)/100, ValorPct=parse(valorPct.value)/100,
+          LoyerIdxPct=parse(loyerIdxPct.value)/100, AltPct=parse(altPct.value)/100;
+
+    // --- Acheter : coût du crédit, et valeur du bien à la fin ---
+    const apport = Prix*ApportPct;
+    const emprunt = Prix - apport;
+    const notaireCost = Prix*NotairePct;
+    const i = Rc/12, m = N*12;
+    const mensualite = i===0 ? emprunt/m : emprunt*i/(1-Math.pow(1+i,-m));
+    const totalRemb = mensualite*m;
+    const interets = totalRemb - emprunt;
+    const assuranceAnnual = emprunt*AssurancePct; // calculée sur le capital initial, comme la plupart des contrats
+    const assuranceTotal = assuranceAnnual*N;
+    const chargesAnnual = Prix*ChargesPct;
+    const chargesTotal = chargesAnnual*N;
+    const prixFutur = Prix*Math.pow(1+ValorPct,N);
+
+    // --- Louer : ce qu'on évite de payer, et ce qu'on place à la place ---
+    const loyerAnnuel0 = Loyer*12;
+    const g = LoyerIdxPct;
+    const totalLoyers = g===0 ? loyerAnnuel0*N : loyerAnnuel0*((Math.pow(1+g,N)-1)/g);
+    const K0 = apport + notaireCost; // si on loue, ni l'un ni l'autre n'est dépensé : capital disponible pour investir
+
+    // --- Écart de trésorerie chaque année : qui paie moins investit la différence ---
+    const buyerAnnualCost = mensualite*12 + assuranceAnnual + chargesAnnual;
+    let rentSideFV = 0, buySideFV = 0;
+    for(let t=1; t<=N; t++){
+      const rentAnnual = loyerAnnuel0*Math.pow(1+g, t-1);
+      const growth = Math.pow(1+AltPct, N-t);
+      const diff = buyerAnnualCost - rentAnnual;
+      if(diff > 0) rentSideFV += diff*growth;
+      else if(diff < 0) buySideFV += (-diff)*growth;
+    }
+
+    const K0FV = K0*Math.pow(1+AltPct, N);
+    const patrimoineAchat = prixFutur + buySideFV;
+    const patrimoineLocation = K0FV + rentSideFV;
+    const delta = patrimoineAchat - patrimoineLocation; // >0 : acheter laisse plus de patrimoine
+
+    elMensualite.textContent = nbsp(eur.format(mensualite));
+    elPatrimoineAchat.textContent = nbsp(eur.format(patrimoineAchat));
+    elValeurBien.textContent = nbsp(eur.format(prixFutur));
+    elInterets.textContent = nbsp(eur.format(interets));
+    elAssurance.textContent = nbsp(eur.format(assuranceTotal));
+    elNotaire.textContent = nbsp(eur.format(notaireCost));
+    elCharges.textContent = nbsp(eur.format(chargesTotal));
+    elBuySideWrap.style.display = buySideFV > 1 ? '' : 'none';
+    elBuySideFV.textContent = nbsp(eur.format(buySideFV));
+
+    elPatrimoineLocation.textContent = nbsp(eur.format(patrimoineLocation));
+    elTotalLoyers.textContent = nbsp(eur.format(totalLoyers));
+    elCapitalInitial.textContent = nbsp(eur.format(K0));
+    elK0FV.textContent = nbsp(eur.format(K0FV));
+    elRentSideWrap.style.display = rentSideFV > 1 ? '' : 'none';
+    elRentSideFV.textContent = nbsp(eur.format(rentSideFV));
+
+    elDelta.textContent = nbsp(eur.format(Math.abs(delta)));
+
+    const tol = Math.max(500, Math.abs(Prix)*0.004);
+    verdict.classList.remove('is-gain','is-perte','is-flat');
+    if(delta > tol){ verdict.classList.add('is-gain'); elLine.textContent='Acheter laisse plus de patrimoine, sur cette durée.'; }
+    else if(delta < -tol){ verdict.classList.add('is-perte'); elLine.textContent='Louer laisse plus de patrimoine, sur cette durée.'; }
+    else{ verdict.classList.add('is-flat'); elLine.textContent='Les deux options se neutralisent presque.'; }
+
+    pop(elMensualite); pop(elPatrimoineAchat); pop(elValeurBien); pop(elInterets); pop(elAssurance); pop(elNotaire); pop(elCharges); pop(elBuySideFV);
+    pop(elPatrimoineLocation); pop(elTotalLoyers); pop(elCapitalInitial); pop(elK0FV); pop(elRentSideFV); pop(elDelta);
+  }
+
+  inputs.forEach(inp=>{
+    inp.addEventListener('input',()=>{ sizeOf(inp); compute(); });
+    inp.addEventListener('focus',()=>{ inp.value=inp.value.replace(/\s| /g,''); sizeOf(inp); inp.select(); });
+    inp.addEventListener('blur',()=>{
+      if(inp===prix || inp===loyer){ const v=parse(inp.value); inp.value=v?grp.format(v):''; }
+      sizeOf(inp);
+    });
+  });
+
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(()=>{ inputs.forEach(sizeOf); });
+  }
+  prix.value=grp.format(parse(prix.value));
+  loyer.value=grp.format(parse(loyer.value));
+  inputs.forEach(sizeOf);
+  compute();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apport ou placement ?</title>
+<meta name="description" content="Plutôt apporter plus sur un achat immobilier, ou emprunter davantage pour garder du cash à placer ? La comparaison, en une phrase.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/outils.css">
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">Apport immobilier ou placement</p>
+
+    <p class="statement">
+      Plutôt que d'apporter
+      <input class="fill" id="x" inputmode="decimal" aria-label="Montant en euros" value="20000">&nbsp;€ de plus,
+      je pourrais emprunter ce même montant à
+      <input class="fill" id="rc" inputmode="decimal" aria-label="Taux du crédit en pourcent" value="3.3">&nbsp;%
+      sur
+      <input class="fill" id="n" inputmode="numeric" aria-label="Durée en années" value="20">&nbsp;ans,
+      et placer mon cash à
+      <input class="fill" id="rp" inputmode="decimal" aria-label="Rendement brut du placement en pourcent" value="6">&nbsp;% brut par an.
+    </p>
+
+    <p class="statement">
+      Sur cette durée, l'emprunt supplémentaire coûte <span class="answer" id="coutCredit">0&nbsp;€</span> en intérêts et frais.
+      Le placement, après fiscalité, rapporterait <span class="answer" id="gainNet">0&nbsp;€</span>.
+    </p>
+
+    <p class="verdict" id="verdict">
+      Écart entre les deux options : <span class="num" id="delta">0&nbsp;€</span>. <b id="line">Ça se neutralise.</b>
+    </p>
+
+    <p class="assumptions">
+      <span class="eyebrow">Hypothèses retenues (modifiables)</span>
+      Une fiscalité de <input class="fill-sub" id="fisc" inputmode="decimal" aria-label="Fiscalité sur les gains en pourcent" value="31.4">&nbsp;% s'applique sur les gains du placement (flat tax : 12,8&nbsp;% d'impôt sur le revenu + 18,6&nbsp;% de prélèvements sociaux ; via une assurance-vie de plus de 8 ans, la part impôt disparaît et le taux retombe à 18,6&nbsp;%),
+      et des frais de dossier / garantie de <input class="fill-sub" id="frais" inputmode="decimal" aria-label="Frais sur le crédit en pourcent" value="1.5">&nbsp;% s'ajoutent au montant emprunté en plus.
+    </p>
+
+    <p class="foot">
+      Comparaison illustrative : intérêts d'emprunt amortis sur la durée vs. rendement composé du placement, net de fiscalité.<br>
+      Le calcul suppose que le crédit est remboursé avec vos revenus, pas en retirant du placement : c'est ce qui permet à un rendement net même inférieur au taux du crédit de rester gagnant (le crédit s'amortit sur un capital qui diminue, le placement reste investi en entier).<br>
+      Modifiez les valeurs, tout se recalcule.
+    </p>
+  </main>
+
+  <span id="measure" aria-hidden="true"></span>
+
+<script>
+(function(){
+  const eur = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0,minimumFractionDigits:0});
+  const eurSigned = (x)=> (x>=0?'+':'−') + eur.format(Math.abs(x));
+  const grp = new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2});
+
+  const x=document.getElementById('x'), rc=document.getElementById('rc'), n=document.getElementById('n'),
+        rp=document.getElementById('rp'), fisc=document.getElementById('fisc'), frais=document.getElementById('frais');
+  const elCoutCredit=document.getElementById('coutCredit'), elGainNet=document.getElementById('gainNet'),
+        elDelta=document.getElementById('delta'), elLine=document.getElementById('line'),
+        verdict=document.getElementById('verdict');
+  const measure=document.getElementById('measure');
+  const inputs=[x,rc,n,rp,fisc,frais];
+
+  function parse(v){ return parseFloat(String(v).replace(/\s| /g,'').replace(',','.')) || 0; }
+
+  function sizeOf(inp){
+    const cs=getComputedStyle(inp);
+    measure.style.font=cs.font;
+    measure.style.fontWeight=cs.fontWeight;
+    measure.style.letterSpacing=cs.letterSpacing;
+    measure.textContent=inp.value.length?inp.value:inp.placeholder||'0';
+    inp.style.width=(measure.offsetWidth+10)+'px';
+  }
+
+  function nbsp(s){ return s.replace(/\s/g,' '); }
+
+  function pop(el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+
+  function compute(){
+    const X=parse(x.value), Rc=parse(rc.value)/100, N=Math.max(parse(n.value),1),
+          RpBrut=parse(rp.value)/100, Fisc=parse(fisc.value)/100, Frais=parse(frais.value)/100;
+
+    // Coût du crédit additionnel : intérêts d'un prêt amorti sur N ans + frais de dossier/garantie
+    const i = Rc/12, m = N*12;
+    const mensualite = i===0 ? X/m : X*i/(1-Math.pow(1+i,-m));
+    const totalRemb = mensualite*m;
+    const interets = totalRemb - X;
+    const fraisCredit = X*Frais;
+    const coutCredit = interets + fraisCredit;
+
+    // Gain du placement, rendement brut net de fiscalité (flat tax sur le gain)
+    const rpNet = RpBrut*(1-Fisc);
+    const valeurFinale = X*Math.pow(1+rpNet,N);
+    const gainNet = valeurFinale - X;
+
+    const delta = gainNet - coutCredit;
+
+    elCoutCredit.textContent = nbsp(eur.format(coutCredit));
+    elGainNet.textContent = nbsp(eur.format(gainNet));
+    elDelta.textContent = nbsp(eurSigned(delta));
+
+    const tol = Math.max(50, Math.abs(X)*0.003);
+    verdict.classList.remove('is-gain','is-perte','is-flat');
+    if(delta>tol){ verdict.classList.add('is-gain'); elLine.textContent='Emprunter pour placer rapporte plus que d’apporter davantage.'; }
+    else if(delta<-tol){ verdict.classList.add('is-perte'); elLine.textContent='Apporter plus reste la meilleure option : l’écart de taux ne joue pas en votre faveur.'; }
+    else{ verdict.classList.add('is-flat'); elLine.textContent='Les deux options se neutralisent presque.'; }
+
+    pop(elCoutCredit); pop(elGainNet); pop(elDelta);
+  }
+
+  inputs.forEach(inp=>{
+    inp.addEventListener('input',()=>{ sizeOf(inp); compute(); });
+    inp.addEventListener('focus',()=>{ inp.value=inp.value.replace(/\s| /g,''); sizeOf(inp); inp.select(); });
+    inp.addEventListener('blur',()=>{
+      if(inp===x){ const v=parse(inp.value); inp.value=v?grp.format(v):''; }
+      sizeOf(inp);
+    });
+  });
+
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(()=>{ inputs.forEach(sizeOf); });
+  }
+  x.value=grp.format(parse(x.value));
+  inputs.forEach(sizeOf);
+  compute();
+})();
+</script>
+</body>
+</html>
