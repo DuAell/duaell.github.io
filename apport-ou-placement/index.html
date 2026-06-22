@@ -90,10 +90,10 @@
     const fraisCredit = X*Frais;
     const coutCredit = interets + fraisCredit;
 
-    // Gain du placement, rendement brut net de fiscalité (flat tax sur le gain)
-    const rpNet = RpBrut*(1-Fisc);
-    const valeurFinale = X*Math.pow(1+rpNet,N);
-    const gainNet = valeurFinale - X;
+    // Gain du placement : capitalisation au taux brut, flat tax appliquée sur le gain total à la sortie
+    const valeurBrute = X*Math.pow(1+RpBrut,N);
+    const gainBrut = valeurBrute - X;
+    const gainNet = gainBrut*(1-Fisc);
 
     const delta = gainNet - coutCredit;
 
